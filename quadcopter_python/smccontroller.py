@@ -99,6 +99,6 @@ def smc(quad, des_state,t):
                    #(lamda3 * (des_theta_dot - theta_dot) + kd3 * (s3/(np.absolute(s3) + delta))) ,
                    #(lamda4 * (des_psi_dot - psi_dot)  + kd4 * (s4/(np.absolute(s4) + delta)))*Iz ]]).T
     
-    P = K * (F**1.5)/R
+    #P = K * (F**1.5)/R
 
     return F, M
