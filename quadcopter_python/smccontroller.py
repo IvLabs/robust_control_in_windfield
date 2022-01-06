@@ -33,6 +33,9 @@ Iy = 0.000232
 Iz = 0.0003738
 Jr = 0
 l = params.L
+m = params.mass
+K = 22.35
+R = params.R
 
 
 def smc(quad, des_state,t):
@@ -97,5 +100,6 @@ def smc(quad, des_state,t):
                    #(lamda3 * (des_theta_dot - theta_dot) + kd3 * (s3/(np.absolute(s3) + delta))) ,
                    #(lamda4 * (des_psi_dot - psi_dot)  + kd4 * (s4/(np.absolute(s4) + delta)))*Iz ]]).T
     
+    P = K * (m**1.5)/R
 
     return F, M
