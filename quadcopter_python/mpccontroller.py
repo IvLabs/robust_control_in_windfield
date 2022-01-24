@@ -77,10 +77,10 @@ class MpcController:
         for t in range(self.N):
 
             # Linear Quadratic cost
-            cost += cp.quad_form(self.x_reference[:,t] - self.x_current[:, t], self.Q) + cp.quad_form(self.u[:, t], self.R)  # Linear Quadratic cost
+            cost += cp.quad_form(self.x_reference[:,t] - self.x_current[:, t], self.Q) + cp.quad_form(self.u[:, t]-np.array([params.mass*params.g,0,0,0]), self.R)  # Linear Quadratic cost
             
             # constraint: x(t+1) = Ax(t) + Bu(t)
-            constr += [self.x_current[:, t + 1] == self.A_zoh@self.x_current[:, t] + self.B_zoh@self.u[:, t]]
+            constr += [self.x_current[:, t + 1] == self.A_zoh@self.x_current[:, t] + self.B_zoh@(self.u[:, t]-np.array([params.mass*params.g,0,0,0]))]
 
         cost += cp.quad_form(self.x_current[:, self.N] - self.x_reference[:,self.N-1], self.Q)  # End of trajectory error cost
        

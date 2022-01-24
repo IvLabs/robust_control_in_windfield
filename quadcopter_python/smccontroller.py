@@ -83,11 +83,7 @@ def smc(quad, des_state,t):
     # Thrust
     
     F = (params.mass * (params.g + des_z_ddot + lamda1 * (des_z_dot - z_dot)))/(cos(phi)*cos(psi)) + kd1 * (s1/(np.absolute(s1) + delta))
-    if F < minF:
-        F = minF
-
-    if F > maxF:
-        F = maxF
+   
     
 
     M = np.array([[(lamda2 * (phi_dot - des_phi_dot) - (theta_dot * psi_dot * ((Iy - Iz)/Ix)))*(Ix/l) + kd2 * (s2/(np.absolute(s2) + delta)) ,

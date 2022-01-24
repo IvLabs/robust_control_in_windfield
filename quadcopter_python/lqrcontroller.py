@@ -1,10 +1,4 @@
 import numpy as np
-import model.params as params
-from math import sin, cos
-import cvxpy as cp
-import control
-from model.quadcopter import Quadcopter
-from scipy.integrate.quadpack import quad
 import scipy
 
 class LqrController:
@@ -25,7 +19,7 @@ class LqrController:
         Q = np.eye(12)*0.01
         Q[0,0] =1000
         Q[1,1] = 1000
-        Q[2, 2] = 1000 
+        Q[2, 2] = 1000
         Q[6, 6] = 100.  
         Q[7, 7] = 100.  
         Q[8, 8] = 100.  

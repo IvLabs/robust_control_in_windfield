@@ -4,9 +4,9 @@ import numpy as np
 
 mass = 0.18 # kg
 g = 9.81 # m/s/s
-I = np.array([(0.00025, 0, 2.55e-6),
-              (0, 0.000232, 0),
-              (2.55e-6, 0, 0.0003738)])
+I = np.array([[0.00025, 0, 2.55e-6],
+              [0, 0.000232, 0],
+              [2.55e-6, 0, 0.0003738]])
 
 
 invI = np.linalg.inv(I)
@@ -16,8 +16,8 @@ minF = 0.0
 maxF = 2.0 * mass * g
 L = arm_length
 H = height
-km = 1.5e-9
-kf = 6.11e-8
+km = 1.5e-7 #motor constant
+kf = 2e-7 #propeller drag constant
 r = km / kf
 
 #  [ F  ]         [ F1 ]

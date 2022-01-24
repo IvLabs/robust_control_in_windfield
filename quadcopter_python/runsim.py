@@ -1,6 +1,4 @@
 
-
-from control import *
 from utils.quadPlot import plot_quad_3d
 from mpccontroller import MpcController
 import utils.trajGen3D as trajGen3D
@@ -14,6 +12,8 @@ import geometriccontroller as gmcontrol
 import smccontroller as smcontrol
 import matplotlib.pyplot as plt
 from math import sqrt
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
 
 animation_frequency = 40
 control_frequency = 160 # Hz for attitude control loop
@@ -33,7 +33,7 @@ def attitudeControl(quad,time, desired_traj,flag,firstiter):
 
     if flag == 1:      # pid controller
         F,M = pidcontrol.run(quad,desired_state,time[0])
-        
+        #print(F.shape)
         F = np.reshape(F,(1,1))
         
 
@@ -61,29 +61,26 @@ def attitudeControl(quad,time, desired_traj,flag,firstiter):
         controller.x_init.value = controller.x0
 
         # solving optimizaton problem
-        problem.solve(solver=cp.OSQP, warm_start=True)
-        F = controller.u[0,0].value
-        M = np.array([controller.u[1, 0].value, controller.u[2, 0].value, controller.u[3, 0].value])
+        problem.solve(solver=cp.OSQP)
+        F = controller.u[0,0].value + params.mass*params.g
+
+        M = np.array([controller.u[1,0].value, controller.u[2,0].value, controller.u[3,0].value])
 
     elif flag == 4:
         F,M = gmcontrol.run_gmc(quad,desired_state,time[0])
-        F = np.reshape(F,(1,1))
+        #F = np.reshape(F,(1,1))
 
     elif flag == 5:
         F,M = smcontrol.smc(quad,desired_state,time[0])
         F = np.reshape(F,(1,1))
 
-
+    #print(F.shape)
 
     quad.update(dt, F, M) # updating quadcopter states by giving generated F,M
 
-    avgspeed = sqrt(quad.state[7]**2 + quad.state[8]**2 + quad.state[9]**2)
-    #print(avgspeed)
-    cpe_dt = np.linalg.norm(np.array([desired_state[indx,0]-quad.state[0],desired_state[indx,1]-quad.state[1],desired_state[indx,2]-quad.state[2]]))
-    cpes = cpes + cpe_dt    # cumulative position error 
     time[0] += dt
 
-    return desired_state[indx,0],desired_state[indx,1]
+    return desired_state[indx,0:3],np.array([quad.state[0],quad.state[1],quad.state[2]])
 
 
 
@@ -93,13 +90,15 @@ def main():
     #totaltime = 
     n = 1
     trajlength = 33.70  # total length of helix trajectory 
-    avgspeed = 1.5   # avg speed of quadrotor between start and end positions
+    avgspeed = 2.0   # avg speed of quadrotor between start and end positions
     iters = int((trajlength/avgspeed)*animation_frequency)
 
 
     iter = n*iters
     plot_frames = np.zeros((3*n*iter,6))
     des_traj = np.zeros((n*iter,2))
+    des_statexyz = np.zeros((4*n*iter,3))
+    curr_statexyz = np.zeros((4*n*iter,3))
 
     trajswitch = 0    
 
@@ -123,7 +122,6 @@ def main():
     (coeff_x, coeff_y, coeff_z) = trajGen3D.get_MST_coefficients(waypoints)
 
     des_trajectory = trajGen3D.trajasarray(time[0],dt,avgspeed,waypoints,coeff_x, coeff_y, coeff_z,iter)
-
     '''desposition = des_trajectory[0]
     desposition_1 =  np.delete(desposition,0,axis=0)
     desposition_1 =  np.r_[desposition_1,np.reshape(desposition[-1,:],(1,3))]
@@ -133,7 +131,7 @@ def main():
     print(total_distance)'''
 
     # flag for controller
-    flag = 3 
+    flag = 3
 
     firstiter = True
     for i in range(n*iter):
@@ -182,16 +180,19 @@ def main():
         
         print(i)
         for j in range(int(control_iterations)):
-            des_state = attitudeControl(quadcopter,time,des_trajectory, flag,firstiter)
+            des_statexyz[4*i+j,:],curr_statexyz[4*i+j,:] = attitudeControl(quadcopter,time,des_trajectory, flag,firstiter)
                
-        des_traj[i,:] = np.array([des_state[0],des_state[1]])   
+        des_traj[i,:] = des_statexyz[4*i,0:2]   
         plot_frames[3*i:3*i+3,:] = quadcopter.world_frame()
+
+    dtwvalue, path = fastdtw(des_statexyz,curr_statexyz,dist=euclidean)
+    print("dtwvalue = ",dtwvalue/(4*n*iter))
 
        
     def animate(i):
         
         return plot_frames[3*i:3*i+3,:]
-    print("cumulative position error = ",cpes)
+    #print("cumulative position error = ",cpes)
     
     plot_quad_3d(des_traj, animate,n*iter)
 
