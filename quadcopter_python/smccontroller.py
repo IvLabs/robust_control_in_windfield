@@ -94,4 +94,6 @@ def smc(quad, des_state,t):
                    #(lamda4 * (des_psi_dot - psi_dot)  + kd4 * (s4/(np.absolute(s4) + delta)))*Iz ]]).T
     
 
-    return F, M
+    des_rpy = np.array([des_phi, des_theta, des_psi])
+
+    return F, M, des_rpy
