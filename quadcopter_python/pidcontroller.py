@@ -51,5 +51,8 @@ def run(quad, des_state,t):
     M = np.array([[k_p_phi * (des_phi - phi) + k_d_phi * (p_des - p),
                    k_p_theta * (des_theta - theta) + k_d_theta * (q_des - q),
                    k_p_psi * (des_psi - psi) + k_d_psi * (r_des - r)]]).T
+    
+    des_rpy = np.array([des_phi, des_theta, des_psi])
+    
+    return F, M, des_rpy
 
-    return F, M
