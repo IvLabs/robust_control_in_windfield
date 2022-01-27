@@ -32,9 +32,12 @@ def attitudeControl(quad,time, desired_traj,flag,firstiter):
     indx = int(time[0]*160)
 
     if flag == 1:      # pid controller
-        F,M = pidcontrol.run(quad,desired_state,time[0])
-        #print(F.shape)
+        F,M, des_rpy = pidcontrol.run(quad,desired_state,time[0])
+        print("des yaw = ", des_rpy[2])
+
         F = np.reshape(F,(1,1))
+        #print(F)
+        rpy = quad.attitude()
         
 
     elif flag == 2:    # lqr controller
@@ -46,6 +49,8 @@ def attitudeControl(quad,time, desired_traj,flag,firstiter):
         F = U[0]
        
         M = np.array([U[1],U[2],U[3]])
+        rpy = quad.attitude()
+        des_rpy=np.array([0,0,0])
         
     elif flag == 3:    # mpc controller
 
@@ -69,10 +74,12 @@ def attitudeControl(quad,time, desired_traj,flag,firstiter):
     elif flag == 4:
         F,M = gmcontrol.run_gmc(quad,desired_state,time[0])
         #F = np.reshape(F,(1,1))
+        rpy = quad.attitude()
 
     elif flag == 5:
         F,M = smcontrol.smc(quad,desired_state,time[0])
         F = np.reshape(F,(1,1))
+        rpy = quad.attitude()    
 
     #print(F.shape)
 
@@ -80,7 +87,7 @@ def attitudeControl(quad,time, desired_traj,flag,firstiter):
 
     time[0] += dt
 
-    return desired_state[indx,0:3],np.array([quad.state[0],quad.state[1],quad.state[2]])
+    return desired_state[indx,0],desired_state[indx,1], desired_state[indx,2], des_rpy[0], des_rpy[1], des_rpy[2], quad.state[0], quad.state[1], quad.state[2] , rpy[0], rpy[1], rpy[2]
 
 
 
@@ -131,7 +138,21 @@ def main():
     print(total_distance)'''
 
     # flag for controller
-    flag = 3
+    flag = 1
+    
+    des_x_arr = np.array([])
+    x_arr = np.array([])
+    des_y_arr = np.array([])
+    y_arr = np.array([])
+    des_z_arr = np.array([])
+    z_arr = np.array([])
+    des_r_arr = np.array([])
+    r_arr = np.array([])
+    des_p_arr = np.array([])
+    p_arr = np.array([])
+    des_yaw_arr = np.array([])
+    yaw_arr = np.array([])
+    time_arr = np.array([])
 
     firstiter = True
     for i in range(n*iter):
@@ -180,15 +201,83 @@ def main():
         
         print(i)
         for j in range(int(control_iterations)):
-            des_statexyz[4*i+j,:],curr_statexyz[4*i+j,:] = attitudeControl(quadcopter,time,des_trajectory, flag,firstiter)
-               
-        des_traj[i,:] = des_statexyz[4*i,0:2]   
+            #des_statexyz[4*i+j,:],curr_statexyz[4*i+j,:] = attitudeControl(quadcopter,time,des_trajectory, flag,firstiter)
+            des_state = attitudeControl(quadcopter,time,des_trajectory, flag,firstiter) 
+        des_traj[i,:] = np.array([des_state[0],des_state[1]])   
         plot_frames[3*i:3*i+3,:] = quadcopter.world_frame()
+        time_arr = np.append(time_arr,time)   
+        des_x_arr = np.append(des_x_arr,des_state[0])
+        x_arr = np.append(x_arr,des_state[6])
+        des_y_arr = np.append(des_y_arr,des_state[1])
+        y_arr = np.append(y_arr,des_state[7])
+        des_z_arr = np.append(des_z_arr,des_state[2])
+        z_arr = np.append(z_arr,des_state[8])
+        des_r_arr = np.append(des_r_arr,des_state[3])
+        r_arr = np.append(r_arr,des_state[9])
+        des_p_arr = np.append(des_p_arr,des_state[4])
+        p_arr = np.append(p_arr,des_state[10])
+        des_yaw_arr = np.append(des_yaw_arr,des_state[5])
+        yaw_arr = np.append(yaw_arr,des_state[11])
+        #print(des_x_arr)
+        #print(time_arr)
+
 
     dtwvalue, path = fastdtw(des_statexyz,curr_statexyz,dist=euclidean)
     print("dtwvalue = ",dtwvalue/(4*n*iter))
+ 
+    # Initialise the subplot function using number of rows and columns
+    figure, axis = plt.subplots(2, 2)
+    
+    # For Desired X
+    axis[0,0].plot(time_arr, des_x_arr, color='r', label='Desired X')
+    axis[0,0].plot(time_arr, x_arr, color='g', label='X')
+    axis[0,0].set_title("X vs Time")
+    #axis[0,0].plot(time_arr, des_x_arr - x_arr)
+    #axis[0,0].set_title("Error X vs Time")
+    
+    # For Desired Y
+    axis[0,1].plot(time_arr, des_y_arr, color='r', label='Desired Y')
+    axis[0,1].plot(time_arr, y_arr, color='g', label='Y')
+    axis[0,1].set_title("Y vs Time")
+    #axis[0,1].plot(time_arr, des_y_arr - y_arr)
+    #axis[0,1].set_title("Error Y vs Time")
 
-       
+    # For Desired Z
+    axis[1,0].plot(time_arr, des_z_arr, color='r', label='Desired Z')
+    axis[1,0].plot(time_arr, z_arr, color='g', label='Z')
+    axis[1,0].set_title("Z vs Time")
+    #axis[1,0].plot(time_arr, des_z_arr - z_arr)
+    #axis[1,0].set_title("Error Z vs Time")    
+    
+    # Combine all the operations and display
+    plt.show()   
+    # Initialise the subplot function using number of rows and columns
+    figure, axis = plt.subplots(2, 2)
+    
+    # For Desired Roll
+    axis[0,0].plot(time_arr, des_r_arr, color='r', label='Desired Roll')
+    axis[0,0].plot(time_arr, r_arr, color='g', label='Roll')
+    axis[0,0].set_title("Desired Roll vs Time")
+    #axis[0,0].plot(time_arr, des_r_arr - r_arr)
+    #axis[0,0].set_title("Error Roll vs Time")    
+
+    # For Desired Pitch
+    axis[0,1].plot(time_arr, des_p_arr, color='r', label='Desired Pitch')
+    axis[0,1].plot(time_arr, p_arr, color='g', label='Pitch')
+    axis[0,1].set_title("Desired Pitch vs Time")
+    #axis[0,1].plot(time_arr, des_p_arr - p_arr)
+    #axis[0,1].set_title("Error Pitch vs Time")    
+
+    # For Desired Yaw
+    axis[1,0].plot(time_arr, des_yaw_arr, color='r', label='Desired Yaw')
+    axis[1,0].plot(time_arr, yaw_arr, color='g',label='Yaw')
+    axis[1,0].set_title("Desired Yaw vs Time")
+    #axis[1,0].plot(time_arr, des_yaw_arr - yaw_arr)
+    #axis[1,0].set_title("Error Yaw vs Time")    
+        
+    # Combine all the operations and display
+    plt.show()
+
     def animate(i):
         
         return plot_frames[3*i:3*i+3,:]
