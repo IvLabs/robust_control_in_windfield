@@ -1,10 +1,9 @@
 
 import numpy as np
 import model.params as params
-from math import sin, cos
 import cvxpy as cp
 import control
-from model.quadcopter import Quadcopter
+
 
 
 class MpcController:
@@ -25,6 +24,9 @@ class MpcController:
         self.B_zoh = np.zeros((12, 4))
         self.zoh()
         self.x_reference = np.zeros((12,self.N))
+        self.constr = []
+        self.cost = 0. 
+        
 
         self.Q = np.array([[1000,0,0,0,0,0,0,0,0,0,0,0]
                           ,[0,1000,0,0,0,0,0,0,0,0,0,0]
@@ -40,6 +42,7 @@ class MpcController:
                           ,[0,0,0,0,0,0,0,0,0,0,0,1]])
 
         self.R = np.eye(4)*1
+        self.formconstraint()
         
     def zoh(self):
         ''' Converts continuous time state-space model into discrete time state space model'''
@@ -50,6 +53,11 @@ class MpcController:
         # Discrete time State-transition matrices
         self.A_zoh = np.array(sys_discrete.A)
         self.B_zoh = np.array(sys_discrete.B)
+
+    def formconstraint(self):
+        for t in range(self.N):
+           self.constr += [self.x_current[:, t + 1] == self.A_zoh@self.x_current[:, t] + self.B_zoh@(self.u[:, t]-np.array([params.mass*params.g,0,0,0]))]
+           self.cost = cp.quad_form(self.u[:, t]-np.array([params.mass*params.g,0,0,0]), self.R)
 
     def run_mpc(self, des_state,t):
         '''Formulates mpc based control optimization problem.
@@ -71,16 +79,17 @@ class MpcController:
         if rc < self.N:
             self.x_reference[:,rc:self.N] = np.tile(self.x_reference[:,rc-1],(self.N-rc,1)).T
 
-        cost = 0.
+        cost = self.cost
         
         constr = [self.x_current[:, 0] == self.x_init]
+        constr += self.constr
         for t in range(self.N):
 
             # Linear Quadratic cost
-            cost += cp.quad_form(self.x_reference[:,t] - self.x_current[:, t], self.Q) + cp.quad_form(self.u[:, t]-np.array([params.mass*params.g,0,0,0]), self.R)  # Linear Quadratic cost
+            cost += cp.quad_form(self.x_reference[:,t] - self.x_current[:, t], self.Q)  # Linear Quadratic cost
             
             # constraint: x(t+1) = Ax(t) + Bu(t)
-            constr += [self.x_current[:, t + 1] == self.A_zoh@self.x_current[:, t] + self.B_zoh@(self.u[:, t]-np.array([params.mass*params.g,0,0,0]))]
+            #constr += [self.x_current[:, t + 1] == self.A_zoh@self.x_current[:, t] + self.B_zoh@(self.u[:, t]-np.array([params.mass*params.g,0,0,0]))]
 
         cost += cp.quad_form(self.x_current[:, self.N] - self.x_reference[:,self.N-1], self.Q)  # End of trajectory error cost
        

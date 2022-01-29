@@ -5,9 +5,9 @@ from utils.utils import  vee_operator, hat_operator
 from utils.quaternion import Quaternion
 
 
-kx = 0.8
-kv = 10.0
-kR = 0.6
+kx = 1.7
+kv = 12.8
+kR = 0.8
 kW = 0.04
 dt = 1/160
 acclns = np.zeros((1,3))

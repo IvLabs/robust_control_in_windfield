@@ -112,10 +112,12 @@ class Quadcopter:
         Fx = 0.5 * 1.225 * 0.08 * sp * vd[0]
         Fy = 0.5 * 1.225 * 0.08 * sp * vd[1]
         Fz = 0.5 * 1.225 * 0.08 * sp * vd[2]
+        #aerodynamic_forces = np.array([[Fx,Fy,Fz]])
+        aerodynamic_forces = np.array([[0,0,0]])   #for 0 aerodynamic force
 
         # acceleration - Newton's second law of motion
 
-        accel = 1.0 / params.mass * (wRb.dot(np.array([[Fx, Fy, F+Fz]]).T)
+        accel = 1.0 / params.mass * (wRb.dot((np.array([[0, 0, F]]) + aerodynamic_forces).T)
                     - np.array([[0, 0, params.mass * params.g]]).T )
         self.accel = accel
         #print(accel)
@@ -159,13 +161,16 @@ class Quadcopter:
         prop_thrusts = params.invA.dot(np.r_[F, M])
         prop_thrusts_clamped = np.maximum(np.minimum(prop_thrusts, params.maxF/4), params.minF/4)
         omsq = np.array([prop_thrusts_clamped[0]/params.km, prop_thrusts_clamped[1]/params.km, prop_thrusts_clamped[2]/params.km, prop_thrusts_clamped[3]/params.km])
-        #print(omsq)
-        F = np.sum(prop_thrusts_clamped)
-        #print(F)
-        M = params.A[1:].dot(prop_thrusts_clamped)
-
+    
+        F = np.sum(prop_thrusts)
+        #F = F = np.sum(prop_thrusts_clamped)  # for clamped z thrust
+       
+        M = params.A[1:].dot(prop_thrusts)
+        #M = params.A[1:].dot(prop_thrusts_clamped)   # for clamped moments
+        
         #Thrust reaction torques
         '''Mt = np.array([[params.km*(omsq[3]-omsq[1])*params.L, params.kf*(omsq[0]-omsq[2])*params.L, 0]]).T
         Mq = np.array([[0, 0, params.kf*(-omsq[0]+omsq[1]-omsq[2]+omsq[3])]]).T
         M_total = Mt + Mq + M'''
         self.state = integrate.odeint(self.state_dot, self.state, [0,dt], args = (F, M))[1]
+        return prop_thrusts

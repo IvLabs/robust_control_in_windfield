@@ -8,18 +8,23 @@ from math import sin, cos
 # Return [F, M] F is total force thrust, M is 3x1 moment matrix
 
 # Constants
-k_d_x = 30
-k_p_x = 3
-k_d_y = 30
-k_p_y = 3
-k_p_z = 1000
-k_d_z = 200
-k_p_phi = 160
-k_d_phi = 3
-k_p_theta = 160
-k_d_theta = 3
-k_p_psi = 80
-k_d_psi = 5
+
+k_p_x = 8.8
+k_p_y = 8.8
+k_p_z = 20
+
+k_d_x = 16
+k_d_y = 16
+k_d_z = 20
+
+
+k_p_phi = 1.30
+k_p_theta = 1.30
+k_p_psi = 0.03
+
+k_d_phi = 0.070
+k_d_theta = 0.070
+k_d_psi = 0.02
 
 def run(quad, des_state,t):
     x, y, z = quad.position()
