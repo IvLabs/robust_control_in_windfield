@@ -168,9 +168,11 @@ class Quadcopter:
         M = params.A[1:].dot(prop_thrusts)
         #M = params.A[1:].dot(prop_thrusts_clamped)   # for clamped moments
         
-        #Thrust reaction torques
-        '''Mt = np.array([[params.km*(omsq[3]-omsq[1])*params.L, params.kf*(omsq[0]-omsq[2])*params.L, 0]]).T
-        Mq = np.array([[0, 0, params.kf*(-omsq[0]+omsq[1]-omsq[2]+omsq[3])]]).T
-        M_total = Mt + Mq + M'''
-        self.state = integrate.odeint(self.state_dot, self.state, [0,dt], args = (F, M))[1]
+        # External Aerodynamic Moment
+        om = self.omega()
+        Ma = np.array([[params.kf*(om[0]**2), params.kf*(om[1]**2), params.kf*(om[2]**2)]]).T
+        M_total = M + Ma
+ 
+        self.state = integrate.odeint(self.state_dot, self.state, [0,dt], args = (F, M_total))[1]
+    
         return prop_thrusts
