@@ -112,14 +112,14 @@ class Quadcopter:
         Fx = 0.5 * 1.225 * 0.08 * sp * vd[0]
         Fy = 0.5 * 1.225 * 0.08 * sp * vd[1]
         Fz = 0.5 * 1.225 * 0.08 * sp * vd[2]
-        #aerodynamic_forces = np.array([[Fx,Fy,Fz]])
-        aerodynamic_forces = np.array([[0,0,0]])   #for 0 aerodynamic force
+        #aerodynamic_forces = np.array([[Fx,Fy,Fz]]).T
+        aerodynamic_forces = np.array([[0,0,0]]).T   #for 0 aerodynamic force
 
         # acceleration - Newton's second law of motion
-
-        accel = 1.0 / params.mass * (wRb.dot((np.array([[0, 0, F]]) + aerodynamic_forces).T)
+        accel = 1.0 / params.mass * (wRb.dot(np.array([[0, 0, F]]).T) + aerodynamic_forces
                     - np.array([[0, 0, params.mass * params.g]]).T )
         self.accel = accel
+        
         #print(accel)
         # angular velocity - using quternion
         # http://www.euclideanspace.com/physics/kinematics/angularvelocity/
