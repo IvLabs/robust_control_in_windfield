@@ -90,12 +90,12 @@ def attitudeControl(quad,time, desired_traj,flag,firstiter):
 
     #print(F.shape)
 
-    motor_thrusts = quad.update(dt, F, M) # updating quadcopter states by giving generated F,M
+    motor_thrusts,u,v = quad.update(dt, F, M) # updating quadcopter states by giving generated F,M
     motor_thrusts = np.reshape(motor_thrusts,(4,1))
 
     time[0] += dt
 
-    return (desired_state[indx,0],desired_state[indx,1], desired_state[indx,2], des_rpy[0], des_rpy[1], des_rpy[2], quad.state[0], quad.state[1], quad.state[2] , rpy[0], rpy[1], rpy[2]),motor_thrusts
+    return (desired_state[indx,0],desired_state[indx,1], desired_state[indx,2], des_rpy[0], des_rpy[1], des_rpy[2], quad.state[0], quad.state[1], quad.state[2] , rpy[0], rpy[1], rpy[2]),motor_thrusts,u,v
 
 
 
@@ -146,8 +146,9 @@ def main():
     print(total_distance)'''
 
     # flag for controller
-    flag = 4
-    
+    flag = 1
+    u_arr = []
+    v_arr = []
     des_x_arr = np.array([])
     x_arr = np.array([])
     des_y_arr = np.array([])
@@ -212,7 +213,9 @@ def main():
         print(i)
         for j in range(int(control_iterations)):
             #des_statexyz[4*i+j,:],curr_statexyz[4*i+j,:] = attitudeControl(quadcopter,time,des_trajectory, flag,firstiter)
-            des_state,motor_thrusts = attitudeControl(quadcopter,time,des_trajectory, flag,firstiter) 
+            des_state,motor_thrusts,u,v = attitudeControl(quadcopter,time,des_trajectory, flag,firstiter)
+            u_arr.append(u)
+            v_arr.append(v) 
             motor_thrusts_array = np.r_[motor_thrusts_array,motor_thrusts.T]
             time_array = np.append(time_array,time[0])
             des_statexyz[4*i+j,:] = np.array([des_state[0],des_state[1],des_state[2]])
@@ -306,7 +309,7 @@ def main():
 
     def animate(i):
         
-        return plot_frames[3*i:3*i+3,:]
+        return plot_frames[3*i:3*i+3,:],u_arr[4*i],v_arr[4*i]
     #print("cumulative position error = ",cpes)
     
     plot_quad_3d(des_traj, animate,n*iter)

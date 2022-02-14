@@ -18,7 +18,13 @@ def plot_quad_3d(des_traj, get_world_frame,itr):
     get_world_frame is a function which return the "next" world frame to be drawn
     """
 
-    global motors,pid,lqr,mpc,timelabel
+    global motors,pid,lqr,mpc,timelabel,Q
+
+    x = np.arange(-6, 6, 0.4)
+    y = np.arange(-6, 6, 0.4)
+    X,Y = np.meshgrid(x,y)
+    u = np.ones(X.shape)
+    v = np.ones(Y.shape) 
     fig = plt.figure()
     ax = fig.add_axes([0, 0, 1, 1])
     ax.plot([], [], [], '-', c='grey')
@@ -31,6 +37,7 @@ def plot_quad_3d(des_traj, get_world_frame,itr):
     mpc, = ax.plot([], [], '.', c='green', markersize=2)
     motors, = ax.plot([], [], 'o', c='black')
     ax.plot(des_traj[:,0],des_traj[:,1],'.',c='black',markersize=2, markevery=4)
+    Q = ax.quiver(X, Y, u, v,color = 'gray')
     set_limit((-6,6), (-6,6), (-2,2))
     
     an = animation.FuncAnimation(fig,
@@ -52,10 +59,11 @@ def set_limit(x, y, z):
 
 def anim_callback(i, get_world_frame):
     '''callback function for animation'''
-    frame = get_world_frame(i)
-    set_frame(i,frame)
+        
+    frame, u,v = get_world_frame(i)
+    set_frame(i,frame,u,v)
 
-def set_frame(i,frame):
+def set_frame(i,frame,u,v):
     '''plots quadcopter position in each frame'''
     # convert 3x6 world_frame matrix into three line_data objects which is 3x2 (row:point index, column:x,y,z)
     lines_data = [frame[:,[0,2]], frame[:,[1,3]], frame[:,[4,5]]]
@@ -63,6 +71,7 @@ def set_frame(i,frame):
     string = 't={}'.format(round(i/40,2))
     timelabel.set_text(string)
     lines = ax.get_lines()
+    Q.set_UVC(u,v)
     
     for line, line_data in zip(lines[:3], lines_data):
         x, y, z = line_data
