@@ -1,25 +1,19 @@
 
-
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.colors import cnames
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import matplotlib.patches as patches
 import numpy as np
-import sys
-
-from numpy.core.fromnumeric import repeat
 
 history = np.zeros((1800,3))
 count = 0
 string = " "
-def plot_quad_3d(des_traj, get_world_frame,itr):
+def plot_quad_3d(des_traj, get_world_frame,itr,wind_state):
     """
     get_world_frame is a function which return the "next" world frame to be drawn
     """
 
-    global motors,pid,lqr,mpc,timelabel,Q
+    global motors,pid,lqr,mpc,timelabel,Q,wind
 
+    wind = wind_state
     x = np.arange(-6, 6, 0.4)
     y = np.arange(-6, 6, 0.4)
     X,Y = np.meshgrid(x,y)
@@ -37,7 +31,8 @@ def plot_quad_3d(des_traj, get_world_frame,itr):
     mpc, = ax.plot([], [], '.', c='green', markersize=2)
     motors, = ax.plot([], [], 'o', c='black')
     ax.plot(des_traj[:,0],des_traj[:,1],'.',c='black',markersize=2, markevery=4)
-    Q = ax.quiver(X, Y, u, v,color = 'gray')
+    if wind_state:
+        Q = ax.quiver(X, Y, u, v,color = 'gray')
     set_limit((-6,6), (-6,6), (-2,2))
     
     an = animation.FuncAnimation(fig,
@@ -71,7 +66,8 @@ def set_frame(i,frame,u,v):
     string = 't={}'.format(round(i/40,2))
     timelabel.set_text(string)
     lines = ax.get_lines()
-    Q.set_UVC(u,v)
+    if wind:
+        Q.set_UVC(u,v)
     
     for line, line_data in zip(lines[:3], lines_data):
         x, y, z = line_data
@@ -85,19 +81,6 @@ def set_frame(i,frame,u,v):
         count += 1
     xline = history[:count,0]
     yline = history[:count,1]
-    
-    '''if i <= 600:
-        pid.set_data(xline[0:i], yline[0:i])
-        lqr.set_data(0,0)
-        mpc.set_data(0,0)
-    if i >600 and i<=1200:
-        pid.set_data(xline[0:600],yline[0:600])
-        lqr.set_data(xline[601:i], yline[601:i])
-        mpc.set_data(0,0)
-    if i > 1200:
-        pid.set_data(xline[0:600],yline[0:600])
-        lqr.set_data(xline[601:1200],yline[601:1200])
-        mpc.set_data(xline[1201:i], yline[1201:i])'''
 
     pid.set_data(xline,yline)
 

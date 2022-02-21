@@ -215,15 +215,13 @@ def trajasarray(t,dt,v,waypoints,coeff_x, coeff_y, coeff_z,iter):
     velocity = np.zeros((int(4*iter),3))
     accln = np.zeros((int(4*iter),3))
     for i in range(int(4*iter)):
-        
-        
         des_states = generate_trajectory(t, v, waypoints, coeff_x, coeff_y, coeff_z)
         
         position[i,:] = np.array([des_states[0][0],des_states[0][1],des_states[0][2]])
         velocity[i,:] = np.array([des_states[1][0],des_states[1][1],des_states[1][2]])
         accln[i,:] = np.array([des_states[2][0],des_states[2][1],des_states[2][2]])
         t = t + dt
-
+    
     return position,velocity,accln
 
 
