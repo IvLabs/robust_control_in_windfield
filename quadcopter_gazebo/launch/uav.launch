@@ -10,7 +10,7 @@
     
     <arg name="vehicle" default="iris"/>
     
-    <arg name="sdf" default="$(find quadcopter)/models/iris_depth_camera/iris.sdf"/>
+    <arg name="sdf" default="$(find quadcopter)/models/iris/iris.sdf"/>
 
     <!-- gazebo configs -->
     <arg name="gui" default="true"/>
