@@ -12,3 +12,9 @@ sudo apt-get install protobuf-compiler libprotobuf-dev
 #### ROS Topic for publishing actuator commands:
 * '/desired/motor_speeds'    
 * How to publish msgs? Message Type? :- refer to testing.py for example
+
+### For Launching the World
+```
+cd <your catkin_ws>/src
+roslaunch quadcopter uav.launch
+```
