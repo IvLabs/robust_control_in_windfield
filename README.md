@@ -2,6 +2,8 @@
 
 ## Flight Animation
 
+## Plots
+
 
 ## Polynomial Trajectory Tracking Performance
 * [Dynamic Time warping](https://en.wikipedia.org/wiki/Dynamic_time_warping)
